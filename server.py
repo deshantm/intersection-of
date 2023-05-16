@@ -1,6 +1,7 @@
 #import BaseHTTPServer, HTTPServer
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import os
+import openai
 
 #for local development use localhost,
 #but for production use 0.0.0.0
@@ -192,6 +193,10 @@ class MyServer(BaseHTTPRequestHandler):
                 
 
                 if topic_key in topic_pairs_intersections.keys():
+                    #debug print topic_key found
+                    if os.environ.get('ENV') == 'dev':
+                        print("topic_key found")
+                        self.wfile.write(bytes("<p>Topic: %s</p>" % topic_key, "utf-8"))
 
                     #debug code to print topic_pairs_intersections
                     if os.environ.get('ENV') == 'dev':
@@ -200,7 +205,33 @@ class MyServer(BaseHTTPRequestHandler):
                     
                     intersection = topic_pairs_intersections[topic_key]
                     self.wfile.write(bytes("<p>Intersection: %s</p>" % intersection, "utf-8"))
-            
+                else:
+                    
+                    #debug print topic_key not found
+                    if os.environ.get('ENV') == 'dev':
+                        print("topic_key not found")
+                    # Set up OpenAI API credentials
+                    openai.api_key = os.environ["OPENAI_API_KEY"]
+
+                    # Define the prompt for the article
+                    prompt = "Write an article about the benefits of meditation."
+
+                    # Generate the article using the GPT-3 API
+                    response = openai.Completion.create(
+                        engine="davinci",
+                        prompt=prompt,
+                        max_tokens=1024,
+                        n=1,
+                        stop=None,
+                        temperature=0.5,
+                    )
+                    #write the response to the page
+                    self.wfile.write(bytes("<p>Response: %s</p>" % response, "utf-8"))
+
+                    # Print the generated article
+                    if os.environ.get('ENV') == 'dev':
+                        print(response.choices[0].text)
+                        
             # If the request path is invalid, display a message
             else:
                 self.wfile.write(b"Invalid request path")
@@ -250,3 +281,5 @@ if __name__ == "__main__":
 
     webServer.server_close()
     print("Server stopped.")
+
+    
