@@ -2,6 +2,7 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import os
 import openai
+import json
 
 #for local development use localhost,
 #but for production use 0.0.0.0
@@ -149,6 +150,16 @@ class MyServer(BaseHTTPRequestHandler):
             </div>
             """
             self.wfile.write(bytes(html_about, "utf-8"))
+        elif request_path == "about-anything":
+            #print the about message
+            #build html_about with about message
+            html_about = """
+            <h1>We are creating the future</h1>
+            <div class="box">
+            <p>Hi.</p>
+            </div>
+            """
+            self.wfile.write(bytes(html_about, "utf-8"))
         elif request_path == "browse":
             #print the browse message
             #build html_browse with browse message
@@ -210,27 +221,29 @@ class MyServer(BaseHTTPRequestHandler):
                     #debug print topic_key not found
                     if os.environ.get('ENV') == 'dev':
                         print("topic_key not found")
-                    # Set up OpenAI API credentials
-                    openai.api_key = os.environ["OPENAI_API_KEY"]
+                    
 
-                    # Define the prompt for the article
-                    prompt = "Write an article about the benefits of meditation."
+                    
+                    openai.api_key = os.environ.get('OPENAI_API_KEY')
 
-                    # Generate the article using the GPT-3 API
-                    response = openai.Completion.create(
-                        engine="davinci",
-                        prompt=prompt,
-                        max_tokens=1024,
-                        n=1,
-                        stop=None,
-                        temperature=0.5,
+                    prompt = "write an article about " + topic_key + " and " + topic_key + "\n\n---\n\nArticle:"
+                    response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                            {"role": "system", "content": "You are a helpful assistant."},
+                            {"role": "user", "content": "Write an article about yoga and meditation."},
+                            {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
+                            {"role": "user", "content": "Write an article about yoga and meditation."}
+                        ]
                     )
-                    #write the response to the page
-                    self.wfile.write(bytes("<p>Response: %s</p>" % response, "utf-8"))
+                    article_content = response['choices'][0]['message']['content']
+                   
+                    # Write the response to the page
+                    self.wfile.write(bytes("<p>Response: %s</p>" % article_content, "utf-8"))
 
                     # Print the generated article
                     if os.environ.get('ENV') == 'dev':
-                        print(response.choices[0].text)
+                         print (article_content)
                         
             # If the request path is invalid, display a message
             else:
