@@ -23,6 +23,10 @@ else:
 
 class MyServer(BaseHTTPRequestHandler):
 
+    def MyServer(self):
+        #start with empty topics dictionary
+        self.topics_dict = {}
+    
 
     def do_GET(self):
         self.send_response(200)
@@ -180,17 +184,65 @@ class MyServer(BaseHTTPRequestHandler):
 
             # If there is only one topic, display that topic's content
             if len(topics) == 1:
-                print("here")
+
+                if topics[0] == "favicon.ico":
+                    return
+                
+
+                #read existing topics
+                single_topics = self.read_topics()
+
                 topic_name = topics[0]
-                topics_dict = self.read_topics()
-
-                #debug code to print topics_dict
+                #debug code to print single topic
                 if os.environ.get('ENV') == 'dev':
-                    print("topics_dict: " + str(topics_dict))
+                    print("single topic: " + topic_name)
 
-                if topic_name in topics_dict.keys():
+                if topic_name in single_topics:
+
+                    #strip quotes from the beginning of the article
+                    article_content = single_topics[topic_name].lstrip('"')
+
                     self.wfile.write(bytes("<p>Topic: %s</p>" % topic_name, "utf-8"))
-                    self.wfile.write(bytes("<p>Content: %s</p>" % topics_dict[topic_name], "utf-8"))
+                    self.wfile.write(bytes("<p>Content: %s</p>" % article_content, "utf-8"))
+                else: #topic not found in single_topics
+                    #build prompt to write a sentence
+                    prompt = "write a sentence that ends with a period and doesn't start wtih a quote and is written with flair about " + topic_name + ":"
+                    #openai completion
+
+
+                    #debug code to print prompt
+                    if os.environ.get('ENV') == 'dev':
+                        print("prompt: " + str(prompt))
+
+                    openai.api_key = os.environ.get('OPENAI_API_KEY')
+
+                        
+                    messages = [{"role": "user", "content": prompt}]
+
+                    response = openai.ChatCompletion.create(
+                        model="gpt-3.5-turbo",
+                        messages=messages,
+                        stop=["."],
+                        temperature=1.0,
+                    )
+                    article_content = response['choices'][0]['message']['content']
+                    
+                    #strip quotes from the beginning of the article
+                    article_content = article_content.lstrip('"')
+
+                    # Write the response to the page
+                    self.wfile.write(bytes("<p>%s.</p>" % article_content, "utf-8"))
+
+                    # Print the generated article
+                    if os.environ.get('ENV') == 'dev':
+                            print (article_content)
+
+                    #cache the generated article in the topics dictionary
+                    single_topics[topic_name] = article_content + "\n"
+                    self.write_topics(single_topics)
+                
+
+                
             
            # If there are multiple topics, display the intersection of those topics
             elif len(topics) >= 2:
@@ -200,6 +252,52 @@ class MyServer(BaseHTTPRequestHandler):
                 #debug code to print topic_key
                 if os.environ.get('ENV') == 'dev':
                     print("topic_key: " + str(topic_key))
+
+                if topic_key in topic_pairs_intersections.keys():
+                    #debug code to print topic_key
+                    if os.environ.get('ENV') == 'dev':
+                        print("topic_key: " + str(topic_key))
+
+                    #debug code to print topic_pairs_intersections[topic_key]
+                    if os.environ.get('ENV') == 'dev':
+                        print("topic_pairs_intersections[topic_key]: " + str(topic_pairs_intersections[topic_key]))
+
+                    #build prompt to write a sentence
+                    prompt = "write a sentence that ends with a period and doesn't start wtih a quote and is written with flair about " + topic_key + ":"
+
+
+                    #debug code to print prompt
+                    if os.environ.get('ENV') == 'dev':
+                        print("prompt: " + str(prompt))
+
+
+                    openai.api_key = os.environ.get('OPENAI_API_KEY')
+
+                    
+                    messages = [{"role": "user", "content": prompt}]
+
+                    response = openai.ChatCompletion.create(
+                        model="gpt-3.5-turbo",
+                        messages=messages,
+                        stop=["."],
+                        temperature=1.0,
+                    )
+                    article_content = response['choices'][0]['message']['content']
+                   
+                    # Write the response to the page
+                    self.wfile.write(bytes("<p>%s.</p>" % article_content, "utf-8"))
+
+                    # Print the generated article
+                    if os.environ.get('ENV') == 'dev':
+                         print (article_content)
+
+                    #cache the generated article in the insersections topics dictionary
+                    topic_pairs_intersections[topic_key] = article_content + "\n"
+                    self.write_topic_pairs_intersections(topic_pairs_intersections)
+
+                    
+
+
 
                 
 
@@ -222,28 +320,46 @@ class MyServer(BaseHTTPRequestHandler):
                     if os.environ.get('ENV') == 'dev':
                         print("topic_key not found")
                     
-
+                    #split the topic_key into topics
+                    topics = topic_key.split('_')
+                    prompt = "write a sentence that ends with a period and doesn't start wtih a quote and is written with flair about " + topics[0]
+                    rest_of_topics = topics[1:]
+                    index = 1
+                    for topic in rest_of_topics:
+                        if index != rest_of_topics[len(rest_of_topics) -1]:
+                            prompt += " and "
+                        index += 1
+                        prompt += topic
+                       
                     
+                    #debug code to print prompt
+                    if os.environ.get('ENV') == 'dev':
+                        print("prompt: " + str(prompt))
+
+
                     openai.api_key = os.environ.get('OPENAI_API_KEY')
 
-                    prompt = "write an article about " + topic_key + " and " + topic_key + "\n\n---\n\nArticle:"
+                    
+                    messages = [{"role": "user", "content": prompt}]
+
                     response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                            {"role": "system", "content": "You are a helpful assistant."},
-                            {"role": "user", "content": "Write an article about yoga and meditation."},
-                            {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
-                            {"role": "user", "content": "Write an article about yoga and meditation."}
-                        ]
+                        model="gpt-3.5-turbo",
+                        messages=messages,
+                        stop=["."],
+                        temperature=1.0,
                     )
                     article_content = response['choices'][0]['message']['content']
                    
                     # Write the response to the page
-                    self.wfile.write(bytes("<p>Response: %s</p>" % article_content, "utf-8"))
+                    self.wfile.write(bytes("<p>%s.</p>" % article_content, "utf-8"))
 
                     # Print the generated article
                     if os.environ.get('ENV') == 'dev':
                          print (article_content)
+
+                    #cache the generated article in the topic_pairs_intersections
+                    topic_pairs_intersections[topic_key] = article_content + "\n"
+                    self.write_topic_pairs_intersections(topic_pairs_intersections)
                         
             # If the request path is invalid, display a message
             else:
@@ -252,38 +368,67 @@ class MyServer(BaseHTTPRequestHandler):
         # End the HTML response
         self.wfile.write(bytes("</body></html>", "utf-8"))
 
-    def read_topics(self):
-        # hardcode topics for now
-        # create topics as map of topic name and string content
-        topics = {}
-        topics["ai"] = "This is all about ai"
-        topics["robots"] = "This is all about robots"
-        print("read_topics called")
-        print("topics_dict: " + str(topics))
-        return topics
+    def write_topic(self, topics_dict):
+        #write topic to file
+        with open:
+            #write topics_dict to file
+            with open('topics_dict.json', 'w') as outfile:
+                #write topics_dict to file
+                json.dump(topics_dict, outfile)
 
 
     def get_topic_pairs_intersections(self):
-        #hardcode topic pairs for now
-        #create topic pairs as map of topic pair and intersection
-        topic_pairs_intersections = {}
-        topic_pairs_intersections["ai_robots"] = "This is the intersection of ai and robots"
-        topic_pairs_intersections["ai_dogs_robots"] = "This is the intersection of ai and dogs and robots"
-        # add more topic intersections here...
+        #load topic_pairs_intersections from file cache topic_pairs_intersections.json or create if it doesn't exist
+        
+        #check if file exists
+        if os.path.isfile('topic_pairs_intersections.json'):
 
-        return topic_pairs_intersections
+            with open('topic_pairs_intersections.json') as json_file:
+                topic_pairs_intersections = json.load(json_file)
+                print("topic_pairs_intersections: " + str(topic_pairs_intersections))
+                return topic_pairs_intersections
+        else:
+            topic_pairs_intersections = {}
+            #create empty file
+            with open('topic_pairs_intersections.json', 'w') as outfile:
+                #write empty json to file
+                json.dump(topic_pairs_intersections, outfile)
 
+            return topic_pairs_intersections
+
+    def write_topic_pairs_intersections(self, topic_pairs_intersections):
+        #write topic_pairs_intersections to file cache topic_pairs_intersections.json
+        with open('topic_pairs_intersections.json', 'w') as outfile:
+            json.dump(topic_pairs_intersections, outfile)
     
+    def read_topics(self):
+        #load topics from file cache topics.json or create if it doesn't exist
+        topics = {}
+        #check if file exists
+        if os.path.isfile('topics.json'):
 
+            with open('topics.json') as json_file:
+                topics = json.load(json_file)
+                print("topics: " + str(topics))
+                return topics
+        else:
+            topics = {}
+            #create empty file
+            with open('topics.json', 'w') as outfile:
+                #write empty json to file
+                json.dump(topics, outfile)
+
+            return topics
+        
+    def write_topics(self, topics):
+        #write topics to file cache topics.json
+        with open('topics.json', 'w') as outfile:
+            json.dump(topics, outfile)
     
 
 
 if __name__ == "__main__":       
 
-    #add option when starting HTTPServer to do hot reloads
-    #https://stackoverflow.com/questions/7023052/configure-httpserver-to-do-hot-reloads
-
-  
     webServer = HTTPServer((hostName, serverPort), MyServer)
     print("Server started http://%s:%s" % (hostName, serverPort))
 
