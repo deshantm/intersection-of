@@ -131,9 +131,11 @@ class MyServer(BaseHTTPRequestHandler):
         html_nav = "<nav><ul><li><a href='/'>Home</a></li> | <li><a href='/about'>About</a></li> | <li><a href='/browse'>Browse Articles</a></li></ul></nav>"
 
 
-        #print beginning of html
-        self.wfile.write(bytes(html_header, "utf-8"))
-        self.wfile.write(bytes(html_nav, "utf-8"))
+        if "well-know" not in request_path:
+
+            #print beginning of html
+            self.wfile.write(bytes(html_header, "utf-8"))
+            self.wfile.write(bytes(html_nav, "utf-8"))
 
         if request_path == "":
             #print the welcome message
@@ -172,6 +174,10 @@ class MyServer(BaseHTTPRequestHandler):
         else:
             # Split the path into topics by slashes
             topics = request_path.split('/')
+            with open("/home/public/" + topics[0] + "/" + topics[1] + "/" + topics[2], 'r') as myfile:
+                        data=myfile.read()
+                        self.wfile.write(bytes(data, "utf-8"))
+                        return
 
             #debug code to print topics
             if os.environ.get('ENV') == 'dev':
@@ -246,6 +252,15 @@ class MyServer(BaseHTTPRequestHandler):
             
            # If there are multiple topics, display the intersection of those topics
             elif len(topics) >= 2:
+
+                #if first topic is ".well-known" then return
+                if topics[0] == ".well-known" and topics[1] == "acme-challenge":
+                    #read topics[2] and write as response
+                    with open("/home/public/" + topics[0] + "/" + topics[1] + "/" + topics[2], 'r') as myfile:
+                        data=myfile.read()
+                        self.wfile.write(bytes(data, "utf-8"))
+                        return
+
                 topic_pairs_intersections = self.get_topic_pairs_intersections()
                 topic_key = "_".join(sorted(topics))
 
@@ -295,7 +310,7 @@ class MyServer(BaseHTTPRequestHandler):
                     topic_pairs_intersections[topic_key] = article_content + "\n"
                     self.write_topic_pairs_intersections(topic_pairs_intersections)
 
-                    
+
 
 
 
