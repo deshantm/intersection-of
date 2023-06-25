@@ -170,14 +170,35 @@ class MyServer(BaseHTTPRequestHandler):
             #print the browse message
             #build html_browse with browse message
             html_browse = "<p>This is the browse page</p>"
+            #go through list of topics and print the topic and content for it
+            topics_dict = self.read_topics()
+            for topic in topics_dict:
+                html_browse = html_browse + "<p><a href='/" + topic + "'>" + topic + "</a></p>"
+
+            intersections_dict = self.get_topic_pairs_intersections()
+
+            #go through list of intersections and print the intersection and content for it
+            for intersection in intersections_dict:
+                topics = intersection.split('_')
+                num_topics = len(topics)
+                index = 0
+                for topic in topics:
+                    if index == 0:
+                        html_browse = html_browse + "<p><a href='/" + topic + "'>" + topic + "</a>"
+                    elif index == num_topics - 1:
+                        html_browse = html_browse + " and <a href='/" + topic + "'>" + topic + "</a></p>"
+                    else:
+                        html_browse = html_browse + ", <a href='/" + topic + "'>" + topic + "</a>"
+                    index = index + 1
+                    
             self.wfile.write(bytes(html_browse, "utf-8"))
         else:
             # Split the path into topics by slashes
             topics = request_path.split('/')
-            with open("/home/public/" + topics[0] + "/" + topics[1] + "/" + topics[2], 'r') as myfile:
-                        data=myfile.read()
-                        self.wfile.write(bytes(data, "utf-8"))
-                        return
+            #with open("/home/public/" + topics[0] + "/" + topics[1] + "/" + topics[2], 'r') as myfile:
+            #            data=myfile.read()
+            #            self.wfile.write(bytes(data, "utf-8"))
+            #            return
 
             #debug code to print topics
             if os.environ.get('ENV') == 'dev':
