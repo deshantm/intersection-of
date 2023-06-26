@@ -178,18 +178,14 @@ class MyServer(BaseHTTPRequestHandler):
             intersections_dict = self.get_topic_pairs_intersections()
 
             #go through list of intersections and print the intersection and content for it
+            
             for intersection in intersections_dict:
+                html_browse = html_browse + "<p><a href=/"
                 topics = intersection.split('_')
-                num_topics = len(topics)
-                index = 0
                 for topic in topics:
-                    if index == 0:
-                        html_browse = html_browse + "<p><a href='/" + topic + "'>" + topic + "</a>"
-                    elif index == num_topics - 1:
-                        html_browse = html_browse + " and <a href='/" + topic + "'>" + topic + "</a></p>"
-                    else:
-                        html_browse = html_browse + ", <a href='/" + topic + "'>" + topic + "</a>"
-                    index = index + 1
+                    html_browse += topic + "/"
+        
+                html_browse += "> " + intersection + "</a></p>"                
                     
             self.wfile.write(bytes(html_browse, "utf-8"))
         else:
