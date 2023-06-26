@@ -265,7 +265,7 @@ class MyServer(BaseHTTPRequestHandler):
                             print (article_content)
 
                     #cache the generated article in the topics dictionary
-                    single_topics[topic_name] = article_content + "\n"
+                    single_topics[topic_name] = article_content
                     self.write_topics(single_topics)
                 
 
@@ -328,7 +328,7 @@ class MyServer(BaseHTTPRequestHandler):
                          print (article_content)
 
                     #cache the generated article in the insersections topics dictionary
-                    topic_pairs_intersections[topic_key] = article_content + "\n"
+                    topic_pairs_intersections[topic_key] = article_content
                     self.write_topic_pairs_intersections(topic_pairs_intersections)
 
 
@@ -394,7 +394,7 @@ class MyServer(BaseHTTPRequestHandler):
                          print (article_content)
 
                     #cache the generated article in the topic_pairs_intersections
-                    topic_pairs_intersections[topic_key] = article_content + "\n"
+                    topic_pairs_intersections[topic_key] = article_content 
                     self.write_topic_pairs_intersections(topic_pairs_intersections)
                         
             # If the request path is invalid, display a message
@@ -404,13 +404,21 @@ class MyServer(BaseHTTPRequestHandler):
         # End the HTML response
         self.wfile.write(bytes("</body></html>", "utf-8"))
 
-    def write_topic(self, topics_dict):
-        #write topic to file
-        with open:
-            #write topics_dict to file
-            with open('topics_dict.json', 'w') as outfile:
-                #write topics_dict to file
-                json.dump(topics_dict, outfile)
+    def write_topics(self, topics_dict):
+     
+        #write topics_dict to file with newlines between each topic  
+        with open('topics.json', 'w') as outfile:
+            json.dump(topics_dict, outfile, indent=2, separators=(',', ': '))
+
+        #debug code to print topics_dict
+        if os.environ.get('ENV') == 'dev':
+            print("topics dict: " + str(topics_dict))
+        
+        #debug code to check file contents
+        if os.environ.get('ENV') == 'dev':
+            with open('topics.json') as json_file:
+                topics_dict = json.load(json_file)
+                print("topics_dict: " + str(topics_dict))
 
 
     def get_topic_pairs_intersections(self):
@@ -428,14 +436,14 @@ class MyServer(BaseHTTPRequestHandler):
             #create empty file
             with open('topic_pairs_intersections.json', 'w') as outfile:
                 #write empty json to file
-                json.dump(topic_pairs_intersections, outfile)
+                json.dump(topic_pairs_intersections, outfile, indent=2, separators=(',', ': '))
 
             return topic_pairs_intersections
 
     def write_topic_pairs_intersections(self, topic_pairs_intersections):
         #write topic_pairs_intersections to file cache topic_pairs_intersections.json
         with open('topic_pairs_intersections.json', 'w') as outfile:
-            json.dump(topic_pairs_intersections, outfile)
+            json.dump(topic_pairs_intersections, outfile, indent=2, separators=(',', ': '))
     
     def read_topics(self):
         #load topics from file cache topics.json or create if it doesn't exist
@@ -452,14 +460,9 @@ class MyServer(BaseHTTPRequestHandler):
             #create empty file
             with open('topics.json', 'w') as outfile:
                 #write empty json to file
-                json.dump(topics, outfile)
+                json.dump(topics, outfile, indent=2, separators=(',', ': '))
 
             return topics
-        
-    def write_topics(self, topics):
-        #write topics to file cache topics.json
-        with open('topics.json', 'w') as outfile:
-            json.dump(topics, outfile)
     
 
 
