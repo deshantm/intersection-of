@@ -73,7 +73,7 @@ class MyServer(BaseHTTPRequestHandler):
             }
             
             a {
-            color: #fff;
+            color: #f00;
             text-decoration: none;
             }
             
@@ -99,7 +99,7 @@ class MyServer(BaseHTTPRequestHandler):
             }
             
             nav li a {
-            color: #fff;
+            color: #f00;
             text-decoration: none;
             padding: 10px 20px;
             border: 1px solid #fff;
@@ -127,8 +127,11 @@ class MyServer(BaseHTTPRequestHandler):
         #build html_header
         html_header = "<html><head><title>https://attheintersectionof.com</title>" + html_style + "</head><body>"
 
-        #build navigation bar with home about and browse articles
-        html_nav = "<nav><ul><li><a href='/'>Home</a></li> | <li><a href='/about'>About</a></li> | <li><a href='/browse'>Browse Articles</a></li></ul></nav>"
+        #build navigation bar with home, about, ai generated articles, human generated articles
+        html_nav = "<nav><ul><li><a href='/'>Home</a></li> | <li><a href='/about'>About</a></li> | <li><a href='/browseai'>AI Articles</a></li> | <li><a href='/browsehuman'>Human Articles</a><li></ul></nav>"
+
+
+        #html_nav = "<nav><ul><li><a href='/'>Home</a></li> | <li><a href='/about'>About</a></li> | <li><a href='/browse'>Browse Articles</a></li></ul></nav>"
 
 
         if "well-know" not in request_path:
@@ -140,7 +143,7 @@ class MyServer(BaseHTTPRequestHandler):
         if request_path == "":
             #print the welcome message
             #build html_home with welcom message and mailing list signup
-            html_home = "<p>Welcome to https://attheintersectionof.com</p><p>Sign up for our mailing list</p>"
+            html_home = "<p>Welcome to At the Interesection of!</p><p>A place where things finally come together</p>"
             self.wfile.write(bytes(html_home, "utf-8"))
         elif request_path == "about":
             #print the about message
@@ -166,28 +169,47 @@ class MyServer(BaseHTTPRequestHandler):
             </div>
             """
             self.wfile.write(bytes(html_about, "utf-8"))
-        elif request_path == "browse":
+        elif request_path == "browseai":
             #print the browse message
-            #build html_browse with browse message
-            html_browse = "<p>This is the browse page</p>"
+            #build html_browse with browseai page
+
+
+            html_browseai = "<p>AI Generated Articles</p>"
             #go through list of topics and print the topic and content for it
             topics_dict = self.read_topics()
+            #Hot topics header
+            html_browseai = html_browseai + "<b>Hot Topics</b>"
             for topic in topics_dict:
-                html_browse = html_browse + "<p><a href='/" + topic + "'>" + topic + "</a></p>"
+                
+                html_browseai = html_browseai + "<p><a href='/" + topic + "'>" + topic + "</a></p>"
 
             intersections_dict = self.get_topic_pairs_intersections()
 
             #go through list of intersections and print the intersection and content for it
             
             for intersection in intersections_dict:
-                html_browse = html_browse + "<p><a href=/"
+
+                #intersection lead-in
+                html_browseai = html_browseai + "<p>At the insection of "
                 topics = intersection.split('_')
                 for topic in topics:
-                    html_browse += topic + "/"
+                    html_browseai += "<a href=/" + topic + ">" + topic + "</a> and "
+                html_browseai = html_browseai[:-5]
+                html_browseai += ":</p>"
+                #intersection link
+                html_browseai = html_browseai + "<a href=/"
+                topics = intersection.split('_')
+                for topic in topics:
+                    html_browseai += topic + "/"
         
-                html_browse += "> " + intersection + "</a></p>"                
+                html_browseai += "> " + intersection + "</a></p>"                
                     
-            self.wfile.write(bytes(html_browse, "utf-8"))
+            self.wfile.write(bytes(html_browseai, "utf-8"))
+        elif request_path == "browsehuman":
+            #print the browse message
+            #build html_browse with browsehuman page
+            html_browsehuman = "<p>Human Generated Articles</p>"
+            self.wfile.write(bytes(html_browsehuman, "utf-8"))
         else:
             # Split the path into topics by slashes
             topics = request_path.split('/')
@@ -225,8 +247,8 @@ class MyServer(BaseHTTPRequestHandler):
                     #strip quotes from the beginning of the article
                     article_content = single_topics[topic_name].lstrip('"')
 
-                    self.wfile.write(bytes("<p>Topic: %s</p>" % topic_name, "utf-8"))
-                    self.wfile.write(bytes("<p>Content: %s</p>" % article_content, "utf-8"))
+                    #self.wfile.write(bytes("<p>%s</p>" % topic_name, "utf-8"))
+                    self.wfile.write(bytes("<p>%s</p>" % article_content, "utf-8"))
                 else: #topic not found in single_topics
                     #build prompt to write a sentence
                     prompt = "write a sentence that ends with a period and doesn't start wtih a quote and is written with flair about " + topic_name + ":"
@@ -337,7 +359,7 @@ class MyServer(BaseHTTPRequestHandler):
                     #debug print topic_key found
                     if os.environ.get('ENV') == 'dev':
                         print("topic_key found")
-                        self.wfile.write(bytes("<p>Topic: %s</p>" % topic_key, "utf-8"))
+                        #self.wfile.write(bytes("<p>%s</p>" % topic_key, "utf-8"))
 
                     #debug code to print topic_pairs_intersections
                     if os.environ.get('ENV') == 'dev':
@@ -345,7 +367,7 @@ class MyServer(BaseHTTPRequestHandler):
 
                     
                     intersection = topic_pairs_intersections[topic_key]
-                    self.wfile.write(bytes("<p>Intersection: %s</p>" % intersection, "utf-8"))
+                    #self.wfile.write(bytes("<p>Intersection: %s</p>" % intersection, "utf-8"))
                 else:
                     
                     #debug print topic_key not found
