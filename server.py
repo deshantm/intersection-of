@@ -175,19 +175,77 @@ class MyServer(BaseHTTPRequestHandler):
 
 
             html_browseai = "<p>AI Generated Articles</p>"
-            #go through list of topics and print the topic and content for it
-            topics_dict = self.read_topics()
-            #Hot topics header
-            html_browseai = html_browseai + "<b>Hot Topics</b>"
-            for topic in topics_dict:
-                
-                html_browseai = html_browseai + "<p><a href='/" + topic + "'>" + topic + "</a></p>"
-
+            #next do intersections
+            # Intersections header
+            html_browseai = html_browseai + "<b>Intersections</b>"    
             intersections_dict = self.get_topic_pairs_intersections()
 
             #go through list of intersections and print the intersection and content for it
             
             for intersection in intersections_dict:
+                #if intersection starts with a . then skip it
+                if intersection.startswith('.'):
+                    continue
+                #else if intersection contains php then skip it
+                elif "php" in intersection:
+                    continue
+                #else if intersection contains txt then skip it
+                elif "txt" in intersection:
+                    continue
+                #else if intersection contains xml then skip it
+                elif "xml" in intersection:
+                    continue
+                #else if intersection contains a question mark then skip it
+                elif "?" in intersection:
+                    continue
+                #else if intersection contains .json then skip it
+                elif ".json" in intersection:
+                    continue
+                #else if intersection contains .html then skip it
+                elif ".html" in intersection:
+                    continue
+                #else if intersection contains .env or .ENV then skip it
+                elif ".env" in intersection:
+                    continue
+                elif ".ENV" in intersection:
+                    continue
+                #else if intersection contains .py then skip it
+                elif ".py" in intersection:
+                    continue
+                #else if intersection contains .sh then skip it
+                elif ".sh" in intersection:
+                    continue
+                #else if intersection contains .rb then skip it
+                elif ".rb" in intersection:
+                    continue
+                #else if intersection contains .js then skip it
+                elif ".js" in intersection:
+                    continue
+                #else if intersection contains .css then skip it
+                elif ".css" in intersection:
+                    continue
+                #else if intersection contains .md then skip it
+                elif ".md" in intersection:
+                    continue
+                #else if intersection contains .git then skip it
+                elif ".git" in intersection:
+                    continue
+                #else if intersection starts with _ then skip it
+                elif intersection.startswith('_'):
+                    continue
+                #else if intersection contains json then skip it
+                elif "json" in intersection:
+                    continue
+                #else if intersection contains .properties then skip it
+                elif ".properties" in intersection:
+                    continue
+                #else if intersection contains .gitignore then skip it
+                elif ".gitignore" in intersection:
+                    continue
+                #else if intersection contains .gitattributes then skip it
+                elif ".gitattributes" in intersection:
+                    continue
+                
 
                 #intersection lead-in
                 html_browseai = html_browseai + "<p>At the insection of "
@@ -204,7 +262,54 @@ class MyServer(BaseHTTPRequestHandler):
         
                 html_browseai += "> " + intersection + "</a></p>"                
                     
+            
+            #go through list of topics and print the topic and content for it
+            topics_dict = self.read_topics()
+            #Hot topics header
+            html_browseai = html_browseai + "<b>Hot Topics</b>"
+            for topic in topics_dict:
+                #if topic starts with a . then skip it
+                if topic.startswith('.'):
+                    continue
+                #else if topic contains php then skip it
+                elif "php" in topic:
+                    continue
+                #else if topic contains txt then skip it
+                elif "txt" in topic:
+                    continue
+                #else if topic contains xml then skip it
+                elif "xml" in topic:
+                    continue
+                #else if topics contains a question mark then skip it
+                elif "?" in topic:
+                    continue
+                #else if topic contains .json then skip it
+                elif ".json" in topic:
+                    continue
+                #else if topic contains .html then skip it
+                elif ".html" in topic:
+                    continue
+                #else if topic contains .env or .ENV then skip it
+                elif ".env" in topic:
+                    continue
+                elif ".ENV" in topic:
+                    continue
+                #else if topic contains .py then skip it
+                elif ".py" in topic:
+                    continue
+                #else if topic contains .sh then skip it
+                elif ".sh" in topic:
+                    continue
+                #else if topic contains .rb then skip it
+                elif ".rb" in topic:
+                    continue
+                #print topic
+                html_browseai = html_browseai + "<p><a href='/" + topic + "'>" + topic + "</a></p>"
+
+            #afer loops return html_browseai
             self.wfile.write(bytes(html_browseai, "utf-8"))
+
+            
         elif request_path == "browsehuman":
             #print the browse message
             #build html_browse with browsehuman page

@@ -7,11 +7,8 @@ This repository contains code that demonstrates the intersection of artificial i
 ## Installation
 
 1. Clone the repository
-2. Install the required packages: `pip install -r requirements.txt`
+2. Run with: `export ENV=dev; python server.py` 
 
-## Usage
-
-To use this code, simply run `python server.py` and navigate to `http://localhost:5000` in your web browser. From there, you can select the topics you would like to see the intersection for.
 
 ## Contributing
 
